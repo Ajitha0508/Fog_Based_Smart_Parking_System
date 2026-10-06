@@ -1,5 +1,6 @@
 import sys
 import os
+from contextlib import asynccontextmanager
 
 # Ensure backend root is always on sys.path regardless of execution directory
 _backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -12,8 +13,28 @@ from app.config import settings
 from app.database import engine, Base
 from app.routers import auth, users, parking, reservations, qr, fog, admin
 
-# Create tables in the SQLite database automatically
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Ensure database schema is created and initial seed data exists on deployment."""
+    Base.metadata.create_all(bind=engine)
+    from app.models import User
+    from app.database import SessionLocal
+    db = SessionLocal()
+    try:
+        if db.query(User).count() == 0:
+            print("[INFO] Database is empty. Seeding initial users and parking slots for deployment...")
+            try:
+                from seed import seed_database
+                seed_database()
+            except ImportError:
+                from backend.seed import seed_database
+                seed_database()
+            print("[INFO] Initial deployment seeding completed successfully!")
+    except Exception as e:
+        print(f"[WARNING] Database seed check encountered: {e}")
+    finally:
+        db.close()
+    yield
 
 app = FastAPI(
     title="Fog Computing-Based Intelligent Parking Management System",
@@ -30,10 +51,11 @@ app = FastAPI(
     """,
     version=settings.PROJECT_VERSION,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
-# Enable CORS for local Vite frontend execution
+# Enable CORS for local Vite frontend execution and production deployments
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
