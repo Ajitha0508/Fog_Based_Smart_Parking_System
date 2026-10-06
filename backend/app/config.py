@@ -7,7 +7,8 @@ class Settings:
     
     SECRET_KEY: str = os.getenv("SECRET_KEY", "smartparking-fog-super-secret-key-2026-production-token")
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+    # Long-lived persistent session: 30 days so users/staff/admin don't get asked again and again
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30
     
     # Handle both SQLite and PostgreSQL (Render provides postgres:// which SQLAlchemy 2.0 needs as postgresql://)
     _db_url = os.getenv("DATABASE_URL", "sqlite:///./smartparking.db")

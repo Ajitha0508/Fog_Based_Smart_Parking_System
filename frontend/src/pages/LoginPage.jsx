@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogIn, Car, AlertCircle, Shield, User, Wrench, Eye, EyeOff, KeyRound, Sparkles } from 'lucide-react';
+import { LogIn, Car, AlertCircle, Shield, User, Wrench, Eye, EyeOff, KeyRound, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { user, isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => localStorage.getItem('saved_email') || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
@@ -16,6 +16,19 @@ export default function LoginPage() {
 
   const queryParams = new URLSearchParams(location.search);
   const isExpired = queryParams.get('expired') === 'true';
+
+  // Automatically redirect if already logged in so the user is never asked again!
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'ADMIN') {
+        navigate('/admin', { replace: true });
+      } else if (user.role === 'STAFF') {
+        navigate('/staff', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const performLogin = async (loginEmail, loginPassword) => {
     setError(null);

@@ -17,8 +17,10 @@ import {
 } from 'lucide-react';
 import { parkingService } from '../services/parkingService';
 import FogStatusBadge from '../components/FogStatusBadge';
+import { useAuth } from '../context/AuthContext';
 
 export default function LandingPage() {
+  const { isAuthenticated, user } = useAuth();
   const [stats, setStats] = useState({ total: 30, available: 26, occupied: 2, reserved: 2 });
 
   useEffect(() => {
@@ -90,13 +92,26 @@ export default function LandingPage() {
 
         {/* Hero CTAs */}
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '3.5rem' }}>
-          <Link to="/parking" className="btn btn-primary btn-lg" style={{ gap: '0.6rem' }}>
-            <span>Find Parking Slots</span>
-            <ArrowRight size={18} />
-          </Link>
-          <Link to="/login" className="btn btn-secondary btn-lg">
-            <span>Operator / Staff Login</span>
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              to={user?.role === 'ADMIN' ? '/admin' : user?.role === 'STAFF' ? '/staff' : '/dashboard'}
+              className="btn btn-primary btn-lg"
+              style={{ gap: '0.6rem', padding: '0.85rem 2rem', fontSize: '1.05rem', background: 'linear-gradient(135deg, #2563eb, #0284c7)' }}
+            >
+              <span>Continue to {user?.role === 'ADMIN' ? 'Admin Console' : user?.role === 'STAFF' ? 'Staff Desk' : 'My Dashboard'}</span>
+              <ArrowRight size={20} />
+            </Link>
+          ) : (
+            <>
+              <Link to="/parking" className="btn btn-primary btn-lg" style={{ gap: '0.6rem' }}>
+                <span>Find Parking Slots</span>
+                <ArrowRight size={18} />
+              </Link>
+              <Link to="/login" className="btn btn-secondary btn-lg">
+                <span>Sign In / Portal Access</span>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Live System Counter Bar */}
