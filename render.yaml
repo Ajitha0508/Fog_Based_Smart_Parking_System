@@ -4,7 +4,7 @@ services:
   # ============================================================
   - type: web
     name: smart-parking-backend
-    env: python
+    runtime: python
     region: oregon
     plan: free
     rootDir: backend
@@ -21,14 +21,14 @@ services:
   # ============================================================
   # 2. Vite React Frontend Static Site (Responsive Client Portal)
   # ============================================================
-  - type: static
+  - type: web
     name: smart-parking-frontend
-    env: static
+    runtime: static
     region: oregon
     plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    staticPublishPath: ./dist
     routes:
       - type: rewrite
         source: /*
